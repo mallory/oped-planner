@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Google Sans', Roboto, Arial, sans-serif; font-size: 13px; color: #202124; background: #fff; }
+
+    .header { padding: 12px 16px 10px; border-bottom: 1px solid #e0e0e0; }
+    .header h1 { font-size: 14px; font-weight: 600; color: #1a73e8; letter-spacing: .2px; }
+    .progress-track { margin-top: 8px; height: 3px; background: #e8eaed; border-radius: 2px; }
+    .progress-bar { height: 100%; background: #1a73e8; border-radius: 2px; transition: width .3s ease; }
+    .step-label { font-size: 11px; color: #80868b; margin-top: 5px; }
+
+    .pane { padding: 16px; }
+    .q-label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .q-hint { font-size: 12px; color: #5f6368; margin-bottom: 10px; line-height: 1.45; }
+
+    textarea {
+      width: 100%; border: 1px solid #dadce0; border-radius: 4px;
+      padding: 8px 10px; font-size: 13px; line-height: 1.5;
+      resize: vertical; min-height: 110px; font-family: inherit;
+      transition: border-color .15s;
+    }
+    textarea:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 1px #1a73e8; }
+
+    .voice-row { margin-top: 7px; display: flex; align-items: center; gap: 8px; }
+    .voice-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px 4px 8px; border: 1px solid #dadce0; border-radius: 12px;
+      background: #fff; font-size: 11px; color: #5f6368; cursor: pointer;
+      transition: background .1s;
+    }
+    .voice-btn:hover { background: #f1f3f4; }
+    .voice-btn.listening { border-color: #d93025; color: #d93025; background: #fce8e6; }
+    .voice-note { font-size: 11px; color: #80868b; }
+
+    .nav { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid #e0e0e0; }
+    .btn {
+      flex: 1; padding: 8px 12px; border-radius: 4px;
+      font-size: 13px; font-weight: 500; cursor: pointer; border: none;
+      transition: background .1s;
+    }
+    .btn-back { background: #f1f3f4; color: #3c4043; }
+    .btn-back:hover:not(:disabled) { background: #e8eaed; }
+    .btn-next { background: #1a73e8; color: #fff; }
+    .btn-next:hover:not(:disabled) { background: #1557b0; }
+    .btn-generate { background: #137333; color: #fff; }
+    .btn-generate:hover:not(:disabled) { background: #0d652d; }
+    .btn:disabled { opacity: .45; cursor: default; }
+
+    .loading { padding: 40px 16px; text-align: center; }
+    .spinner {
+      width: 30px; height: 30px; margin: 0 auto 14px;
+      border: 3px solid #e8eaed; border-top-color: #1a73e8;
+      border-radius: 50%; animation: spin .75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { color: #5f6368; font-size: 13px; }
+
+    .result { padding: 16px; }
+    .result h2 { font-size: 14px; font-weight: 600; color: #137333; margin-bottom: 6px; }
+    .result p { font-size: 12px; color: #5f6368; margin-bottom: 12px; line-height: 1.4; }
+    .doc-link {
+      display: block; padding: 10px 12px; background: #e6f4ea;
+      border: 1px solid #ceead6; border-radius: 4px;
+      color: #137333; font-weight: 500; font-size: 13px;
+      text-decoration: none; word-break: break-all;
+    }
+    .doc-link:hover { background: #ceead6; }
+    .btn-restart {
+      width: 100%; margin-top: 10px; padding: 8px;
+      background: #f1f3f4; color: #3c4043; border: none;
+      border-radius: 4px; cursor: pointer; font-size: 13px;
+    }
+    .btn-restart:hover { background: #e8eaed; }
+
+    .error-box {
+      background: #fce8e6; border: 1px solid #f5c6c2;
+      border-radius: 4px; padding: 10px 12px;
+      font-size: 12px; color: #c5221f; line-height: 1.4; margin-top: 10px;
+    }
+
+    .setup { padding: 16px; }
+    .setup h2 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .setup p { font-size: 12px; color: #5f6368; margin-bottom: 10px; line-height: 1.4; }
+    .setup input[type=password] {
+      width: 100%; border: 1px solid #dadce0; border-radius: 4px;
+      padding: 8px 10px; font-size: 12px; font-family: monospace;
+    }
+    .setup input:focus { outline: none; border-color: #1a73e8; }
+    .setup-link { font-size: 11px; color: #1a73e8; margin-top: 6px; display: block; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+  const QUESTIONS = [
+    {
+      id: 'why_you',
+      label: 'Why you?',
+      hint: 'Your credentials and perspective. Edit if needed.',
+      defaultValue: 'Mallory Knodel is a public interest technologist, the founder of the Social Web Foundation and the author of How the Internet Really Works.'
+    },
+    {
+      id: 'why_now',
+      label: 'Why now?',
+      hint: 'The news hook — what\'s happening right now that makes this timely?'
+    },
+    {
+      id: 'why_this',
+      label: 'Why this?',
+      hint: 'What makes this particular argument or angle the right one to make?'
+    },
+    {
+      id: 'why_us',
+      label: 'Why us?',
+      hint: 'Why this publication or audience? What makes them the right readers?'
+    },
+    {
+      id: 'problem',
+      label: 'Problem',
+      hint: 'A gap in understanding — a contradiction or question that motivates the essay. Include the status quo.'
+    },
+    {
+      id: 'evidence',
+      label: 'Evidence',
+      hint: 'Concrete, observable, factual, non-debatable things to be examined.'
+    },
+    {
+      id: 'analysis',
+      label: 'Analysis',
+      hint: 'Your interpretation of the evidence — what does it mean?'
+    },
+    {
+      id: 'counter_arguments',
+      label: 'Counter-arguments',
+      hint: 'What would critics or skeptics say? How do you address them?'
+    },
+    {
+      id: 'claim',
+      label: 'Claim / Main point',
+      hint: 'The conclusion from your analysis. Your direct response to the problem.'
+    },
+    {
+      id: 'stakes',
+      label: 'Stakes / Why it matters',
+      hint: 'Why does your argument matter to readers? What\'s at stake?'
+    }
+  ];
+
+  let step = 0;
+  const answers = {};
+  let recognition = null;
+  let listening = false;
+
+  QUESTIONS.forEach(q => { answers[q.id] = q.defaultValue || ''; });
+
+  const app = document.getElementById('app');
+
+  function init() {
+    google.script.run
+      .withSuccessHandler(key => {
+        if (!key) { renderSetup(); return; }
+        google.script.run
+          .withSuccessHandler(docContent => {
+            if (docContent && docContent.length > 50) {
+              app.innerHTML = `<div class="loading"><div class="spinner"></div><p>Reading your document…</p></div>`;
+              google.script.run
+                .withSuccessHandler(extracted => {
+                  if (extracted) {
+                    QUESTIONS.forEach(q => {
+                      if (extracted[q.id]) answers[q.id] = extracted[q.id];
+                    });
+                  }
+                  renderQuestion();
+                })
+                .withFailureHandler(() => renderQuestion())
+                .extractAnswersFromDoc(docContent);
+            } else {
+              renderQuestion();
+            }
+          })
+          .withFailureHandler(() => renderQuestion())
+          .getDocContent();
+      })
+      .withFailureHandler(() => renderSetup())
+      .getApiKey();
+  }
+
+  // ── Setup screen ──────────────────────────────────────────────────────────
+
+  function renderSetup() {
+    app.innerHTML = `
+      <div class="header"><h1>Op-Ed Planner</h1></div>
+      <div class="setup">
+        <h2>Enter your Anthropic API key</h2>
+        <p>Required once. Stored securely in your Google account — never shared.</p>
+        <input type="password" id="key-input" placeholder="sk-ant-api03-…">
+        <a class="setup-link" href="https://console.anthropic.com/settings/keys" target="_blank">Get a key at console.anthropic.com →</a>
+        <div id="key-error" class="error-box" style="display:none"></div>
+      </div>
+      <div class="nav">
+        <button class="btn btn-next" onclick="saveKey()">Save & continue</button>
+      </div>`;
+  }
+
+  function saveKey() {
+    const key = document.getElementById('key-input').value.trim();
+    const err = document.getElementById('key-error');
+    if (!key.startsWith('sk-ant-')) {
+      err.textContent = 'That doesn\'t look right — Anthropic keys start with sk-ant-.';
+      err.style.display = 'block';
+      return;
+    }
+    err.style.display = 'none';
+    google.script.run
+      .withSuccessHandler(() => { step = 0; renderQuestion(); })
+      .withFailureHandler(e => { err.textContent = e.message; err.style.display = 'block'; })
+      .setApiKey(key);
+  }
+
+  // ── Question screen ───────────────────────────────────────────────────────
+
+  function renderQuestion() {
+    const q = QUESTIONS[step];
+    const total = QUESTIONS.length;
+    const pct = Math.round(((step + 1) / total) * 100);
+    const isLast = step === total - 1;
+    const hasSpeech = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+    app.innerHTML = `
+      <div class="header">
+        <h1>Op-Ed Planner</h1>
+        <div class="progress-track"><div class="progress-bar" style="width:${pct}%"></div></div>
+        <div class="step-label">Question ${step + 1} of ${total}</div>
+      </div>
+      <div class="pane">
+        <div class="q-label">${q.label}</div>
+        <div class="q-hint">${q.hint}</div>
+        <textarea id="answer">${answers[q.id]}</textarea>
+        <div class="voice-row">
+          ${hasSpeech
+            ? `<button class="voice-btn" id="vbtn" onclick="toggleVoice()">
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                   <path d="M19 10v2a7 7 0 0 1-14 0v-2H3v2a9 9 0 0 0 8 8.94V22H9v2h6v-2h-2v-1.06A9 9 0 0 0 21 12v-2h-2z"/>
+                 </svg>
+                 Dictate
+               </button>`
+            : `<span class="voice-note">Use your system dictation (Fn Fn on Mac)</span>`
+          }
+        </div>
+      </div>
+      <div class="nav">
+        ${step > 0 ? `<button class="btn btn-back" onclick="back()">Back</button>` : ''}
+        <button class="btn ${isLast ? 'btn-generate' : 'btn-next'}" onclick="${isLast ? 'generate()' : 'next()'}">
+          ${isLast ? 'Generate draft' : 'Next'}
+        </button>
+      </div>`;
+  }
+
+  function save() {
+    answers[QUESTIONS[step].id] = document.getElementById('answer').value;
+  }
+
+  function next() { save(); step++; stopVoice(); renderQuestion(); }
+  function back() { save(); step--; stopVoice(); renderQuestion(); }
+
+  // ── Generate ──────────────────────────────────────────────────────────────
+
+  function generate() {
+    save();
+    stopVoice();
+    app.innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Generating your outline and pitch…</p>
+      </div>`;
+
+    google.script.run
+      .withSuccessHandler(result => {
+        result.error ? renderError(result.error) : renderResult(result.tabTitle);
+      })
+      .withFailureHandler(e => renderError(e.message))
+      .generateOutlineAndPitch(answers);
+  }
+
+  function renderResult(tabTitle) {
+    app.innerHTML = `
+      <div class="header"><h1>Op-Ed Planner</h1></div>
+      <div class="result">
+        <h2>Your draft is ready</h2>
+        <p>A new tab has been added to this document:</p>
+        <div class="doc-link">${tabTitle}</div>
+        <button class="btn-restart" onclick="restart()">Start another op-ed</button>
+      </div>`;
+  }
+
+  function renderError(msg) {
+    app.innerHTML = `
+      <div class="header"><h1>Op-Ed Planner</h1></div>
+      <div class="pane">
+        <div class="error-box"><strong>Something went wrong:</strong><br>${msg}</div>
+        <button class="btn btn-next" style="margin-top:12px;width:100%" onclick="renderQuestion()">Try again</button>
+      </div>`;
+  }
+
+  function restart() {
+    step = 0;
+    QUESTIONS.forEach(q => { answers[q.id] = q.defaultValue || ''; });
+    renderQuestion();
+  }
+
+  // ── Voice input ───────────────────────────────────────────────────────────
+
+  function toggleVoice() { listening ? stopVoice() : startVoice(); }
+
+  function startVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    const textarea = document.getElementById('answer');
+    const btn = document.getElementById('vbtn');
+    const base = textarea.value;
+
+    recognition.onresult = e => {
+      let final = '', interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        (e.results[i].isFinal ? (final += e.results[i][0].transcript) : (interim += e.results[i][0].transcript));
+      }
+      textarea.value = base + (base && (final || interim) ? ' ' : '') + final + interim;
+    };
+
+    recognition.onerror = e => {
+      if (e.error === 'not-allowed') {
+        const btn = document.getElementById('vbtn');
+        if (btn) btn.insertAdjacentHTML('afterend', '<span class="voice-note" style="color:#c5221f"> mic access denied</span>');
+      }
+      stopVoice();
+    };
+
+    recognition.onend = () => { listening = false; updateVoiceBtn(false); };
+
+    recognition.start();
+    listening = true;
+    updateVoiceBtn(true);
+  }
+
+  function stopVoice() {
+    if (recognition) { try { recognition.stop(); } catch(_) {} recognition = null; }
+    listening = false;
+    updateVoiceBtn(false);
+  }
+
+  function updateVoiceBtn(active) {
+    const btn = document.getElementById('vbtn');
+    if (!btn) return;
+    btn.classList.toggle('listening', active);
+    btn.childNodes[btn.childNodes.length - 1].textContent = active ? ' Listening…' : ' Dictate';
+  }
+
+  init();
+</script>
+</body>
+</html>
