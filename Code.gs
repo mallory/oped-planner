@@ -19,6 +19,26 @@ function onInstall() {
   onOpen();
 }
 
+// Workspace Add-on entry point — shown in the add-on panel.
+function buildHomepage() {
+  return CardService.newCardBuilder()
+    .setHeader(CardService.newCardHeader().setTitle('Op-Ed Planner'))
+    .addSection(
+      CardService.newCardSection()
+        .addWidget(CardService.newTextParagraph()
+          .setText('Walk through ten planning questions and generate a draft outline and pitch paragraph.'))
+        .addWidget(CardService.newTextButton()
+          .setText('Start planner')
+          .setOnClickAction(CardService.newAction().setFunctionName('openSidebar')))
+    )
+    .build();
+}
+
+function openSidebar() {
+  showSidebar();
+  return CardService.newActionResponseBuilder().build();
+}
+
 function showSidebar() {
   const html = HtmlService.createHtmlOutputFromFile('Sidebar')
     .setTitle('Op-Ed Planner');

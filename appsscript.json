@@ -8,5 +8,15 @@
     "https://www.googleapis.com/auth/script.external_request",
     "https://www.googleapis.com/auth/script.container.ui",
     "https://www.googleapis.com/auth/userinfo.email"
-  ]
+  ],
+  "addOns": {
+    "common": {
+      "name": "Op-Ed Planner",
+      "logoUrl": "https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/article/default/48px.svg",
+      "homepageTrigger": {
+        "runFunction": "buildHomepage"
+      }
+    },
+    "docs": {}
+  }
 }
