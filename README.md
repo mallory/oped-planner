@@ -46,7 +46,7 @@ When you're done, click **Generate draft** and the planner adds a new tab to you
 3. Copy the key (it starts with `sk-ant-`) — you'll paste it into the planner on first use
 4. Add a small amount of credit at **Settings → Billing** — each op-ed planning session costs a fraction of a cent
 
-### 2. Install the add-on
+### 2. Set up the script
 
 1. Go to [script.google.com](https://script.google.com) and sign in with your Google account
 2. Click **New project** (top left)
@@ -58,9 +58,13 @@ When you're done, click **Generate draft** and the planner adds a new tab to you
 
 ### 3. Install it on your account
 
+This add-on is a **Workspace Add-on**, which means it installs once and works in every Google Doc on your account — no document selection or per-file setup required.
+
 1. In the Apps Script editor, click **Deploy → Test deployments**
 2. Click **Install** and follow the authorization prompts
-3. Open any Google Doc — you should now see **Extensions → Op-Ed** in the menu
+3. Open any Google Doc — the add-on is now available two ways:
+   - **Extensions → Op-Ed → Start planner** in the menu bar
+   - The **puzzle-piece icon** on the right side of Docs opens the add-on panel, where you'll see an Op-Ed Planner card with a **Start planner** button
 
 ---
 
